@@ -30,3 +30,9 @@ yarn-error.log*
 
 # Config (contains API tokens)
 config.json
+
+# Test coverage
+coverage/
+
+# Temporary files
+add-label.ts

@@ -94,6 +94,7 @@ export function createTaskCommand(): Command {
     .option('-p, --points <points>', 'Story points estimate', parseInt)
     .option('-t, --time <seconds>', 'Time estimate in seconds', parseInt)
     .option('--position <position>', 'Position (top, bottom, or number)')
+    .option('-l, --labels <labels>', 'Comma-separated list of label names')
     .action(async (options) => {
       const apiToken = getApiToken();
       if (!apiToken) {
@@ -136,6 +137,12 @@ export function createTaskCommand(): Command {
           const pos = options.position;
           taskData.position = isNaN(Number(pos)) ? pos : Number(pos);
         }
+        if (options.labels) {
+          taskData.labels = options.labels.split(',').map((name: string) => ({
+            name: name.trim(),
+            pinned: false,
+          }));
+        }
 
         const spinner = ora('Creating task...').start();
         const result = await client.createTask(taskData);
@@ -156,6 +163,7 @@ export function createTaskCommand(): Command {
     .option('--color <color>', 'Task color')
     .option('-p, --points <points>', 'Story points estimate', parseInt)
     .option('-t, --time <seconds>', 'Time estimate in seconds', parseInt)
+    .option('-l, --labels <labels>', 'Comma-separated list of label names')
     .action(async (taskId: string, options) => {
       const apiToken = getApiToken();
       if (!apiToken) {
@@ -170,6 +178,12 @@ export function createTaskCommand(): Command {
       if (options.color) updates.color = options.color;
       if (options.points !== undefined) updates.pointsEstimate = options.points;
       if (options.time !== undefined) updates.totalSecondsEstimate = options.time;
+      if (options.labels) {
+        updates.labels = options.labels.split(',').map((name: string) => ({
+          name: name.trim(),
+          pinned: false,
+        }));
+      }
 
       if (Object.keys(updates).length === 0) {
         console.error(chalk.red('No updates specified'));
