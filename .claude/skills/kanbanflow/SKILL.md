@@ -1,74 +1,109 @@
----
-name: kanbanflow
-description: CLI tool for managing KanbanFlow tasks, boards, and subtasks. Use when creating, listing, updating, or organizing Kanban tasks and subtasks.
----
+# KanbanFlow Task Management
 
-# KanbanFlow CLI
+Manage KanbanFlow tasks, boards, and subtasks using the kanbanflow-cli project.
 
-After `npm install && npm run build && npm link`, use the `kanban` command globally.
+## When to Use
 
-## Authentication
+Use this skill when the user wants to:
+- Create, list, update, or delete KanbanFlow tasks
+- View board structure (columns and swimlanes)
+- Add or manage subtasks
+- Organize tasks with labels or colors
+- Set time estimates or track time
+- Move tasks between columns or swimlanes
 
+## Available Commands
+
+### Board Commands
+- View board structure: columns, swimlanes, IDs
+
+### Task Commands
+- List tasks (all, by column, or by swimlane)
+- Show task details
+- Create new tasks with options (name, column, swimlane, color, time, points)
+- Update existing tasks
+- Move tasks between columns
+
+### Subtask Commands
+- Add subtasks to tasks
+- Update subtask status (finished/unfinished)
+- Rename subtasks
+
+## Board Structure
+
+The Weekly board has these columns:
+- **Blocked** (t9KXhq9wirzY)
+- **Backlog** (tAyDg4xV0LVu)
+- **Up Next** (tBRsMGsBFNVQ)
+- **Monday** (tCYMGmsIgjn2)
+- **Tuesday** (tDwTgBGWs6Bj)
+- **Wednesday** (tEZbovFdGAmV)
+- **Thursday** (tFsN3RUxkhSV)
+- **Friday** (tGCOEnEvnEE1)
+- **Saturday** (jrMU18XHKJvi)
+- **Sunday** (jsuB8tlNlRo4)
+- **Done** (tH4X9SI3pk6u)
+
+Swimlanes:
+- **🛠️ Work** (tIZ7lgysc1gP)
+- **📒 Personal** (tJo2tmD6C8eK)
+- **🤼 Grappling** (tKj4BTPzndRK)
+- **Archive** (tMZNGGOObgOW)
+
+## Implementation
+
+The CLI is located at `/workspace/group/projects/kanbanflow-cli/`.
+
+Always set the API token environment variable before running commands:
 ```bash
-kanban config set-token           # interactive
-kanban config set-token YOUR_TOKEN
-kanban config show
-
-# Or via environment variable:
-export KANBANFLOW_API_TOKEN=your_token
+export KANBANFLOW_API_TOKEN=66LKS5aBySsZZtpUNg6agkeKR2
 ```
 
-Get token from KanbanFlow: Menu > Settings > API & Webhooks > Add API Token.
-
-Config stored at `~/.kanbanflow-cli/config.json`.
-
-## Commands
-
-### Board
-
+Run commands using:
 ```bash
-kanban board show    # view columns and swimlanes
+cd /workspace/group/projects/kanbanflow-cli && \
+export KANBANFLOW_API_TOKEN=66LKS5aBySsZZtpUNg6agkeKR2 && \
+node dist/index.js [command]
 ```
 
-### Tasks
+### Common Patterns
 
+**Create a task:**
 ```bash
-# List
-kanban task list
-kanban task list --column C9LIn5sEEpqT
-kanban task list --column C9LIn5sEEpqT --swimlane S123456
-
-# Show
-kanban task show T3s6UGyzY
-
-# Create (interactive or with flags)
-kanban task create
-kanban task create \
+node dist/index.js task create \
   --name "Task name" \
   --column COLUMN_ID \
-  --description "Details" \
-  --color green \       # yellow|white|red|green|blue|purple|orange|cyan|brown|magenta
-  --points 5 \
-  --time 7200 \         # seconds (3600 = 1hr, 28800 = 1 day)
-  --position top        # top|bottom|0|1|2...
-
-# Update
-kanban task update T3s6UGyzY --name "New name" --color blue --points 3
-kanban task update T3s6UGyzY --column C_DONE_123   # move to column
+  --swimlane SWIMLANE_ID \
+  --time 900 \
+  --color blue
 ```
 
-### Subtasks
-
+**List tasks:**
 ```bash
-kanban subtask add T3s6UGyzY --name "Step 1"
-kanban subtask add T3s6UGyzY --name "Step 1" --index 0   # specific position
-
-kanban subtask update T3s6UGyzY 0 --finished true
-kanban subtask update T3s6UGyzY 0 --name "Updated step"
+node dist/index.js task list
+node dist/index.js task list --column tCYMGmsIgjn2
+node dist/index.js task list --column tCYMGmsIgjn2 --swimlane tKj4BTPzndRK
 ```
 
-## Notes
+**Show board:**
+```bash
+node dist/index.js board show
+```
 
-- Column and swimlane IDs come from `kanban board show`
-- Task IDs come from `kanban task list`
-- Time helper: `$(( hours * 3600 ))` in bash
+**Add subtask:**
+```bash
+node dist/index.js subtask add TASK_ID --name "Subtask name"
+```
+
+## Task Properties
+
+- **Colors**: yellow, white, red, green, blue, purple, orange, cyan, brown, magenta
+- **Time**: In seconds (900 = 15 min, 1800 = 30 min, 3600 = 1 hour)
+- **Points**: Story points for estimation
+
+## Tips
+
+- When creating multiple similar tasks (e.g., recurring sessions), use a loop or multiple commands
+- Always verify column/swimlane IDs with `board show` if unsure
+- Use descriptive task names to make the board more readable
+- Color-code tasks by type or priority for visual organization
