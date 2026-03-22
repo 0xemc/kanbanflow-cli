@@ -12,98 +12,171 @@ Use this skill when the user wants to:
 - Set time estimates or track time
 - Move tasks between columns or swimlanes
 
-## Available Commands
-
-### Board Commands
-- View board structure: columns, swimlanes, IDs
-
-### Task Commands
-- List tasks (all, by column, or by swimlane)
-- Show task details
-- Create new tasks with options (name, column, swimlane, color, time, points)
-- Update existing tasks
-- Move tasks between columns
-
-### Subtask Commands
-- Add subtasks to tasks
-- Update subtask status (finished/unfinished)
-- Rename subtasks
-
-## Board Structure
-
-The Weekly board has these columns:
-- **Blocked** (t9KXhq9wirzY)
-- **Backlog** (tAyDg4xV0LVu)
-- **Up Next** (tBRsMGsBFNVQ)
-- **Monday** (tCYMGmsIgjn2)
-- **Tuesday** (tDwTgBGWs6Bj)
-- **Wednesday** (tEZbovFdGAmV)
-- **Thursday** (tFsN3RUxkhSV)
-- **Friday** (tGCOEnEvnEE1)
-- **Saturday** (jrMU18XHKJvi)
-- **Sunday** (jsuB8tlNlRo4)
-- **Done** (tH4X9SI3pk6u)
-
-Swimlanes:
-- **🛠️ Work** (tIZ7lgysc1gP)
-- **📒 Personal** (tJo2tmD6C8eK)
-- **🤼 Grappling** (tKj4BTPzndRK)
-- **Archive** (tMZNGGOObgOW)
-
 ## Implementation
 
 The CLI is located at `/workspace/group/projects/kanbanflow-cli/`.
 
-Always set the API token environment variable before running commands:
+### Setup
+
+Always set the API token environment variable before running commands. Check for the token in:
+1. `.env` file in the project directory
+2. User's config at `~/.kanbanflow-cli/config.json`
+3. Ask the user if not found
+
 ```bash
-export KANBANFLOW_API_TOKEN=66LKS5aBySsZZtpUNg6agkeKR2
+export KANBANFLOW_API_TOKEN=<token>
 ```
 
-Run commands using:
+### Running Commands
+
 ```bash
 cd /workspace/group/projects/kanbanflow-cli && \
-export KANBANFLOW_API_TOKEN=66LKS5aBySsZZtpUNg6agkeKR2 && \
+export KANBANFLOW_API_TOKEN=<token> && \
 node dist/index.js [command]
 ```
 
-### Common Patterns
+## Available Commands
+
+### Board Commands
+
+**View board structure:**
+```bash
+node dist/index.js board show
+```
+
+This displays all columns and swimlanes with their IDs. Always run this first to get the correct IDs for the user's board.
+
+### Task Commands
+
+**List tasks:**
+```bash
+# All tasks
+node dist/index.js task list
+
+# Tasks in specific column
+node dist/index.js task list --column COLUMN_ID
+
+# Tasks in column + swimlane
+node dist/index.js task list --column COLUMN_ID --swimlane SWIMLANE_ID
+```
+
+**Show task details:**
+```bash
+node dist/index.js task show TASK_ID
+```
 
 **Create a task:**
 ```bash
 node dist/index.js task create \
   --name "Task name" \
   --column COLUMN_ID \
-  --swimlane SWIMLANE_ID \
-  --time 900 \
-  --color blue
+  [--swimlane SWIMLANE_ID] \
+  [--description "Details"] \
+  [--color COLOR] \
+  [--points NUMBER] \
+  [--time SECONDS] \
+  [--position top|bottom|NUMBER]
 ```
 
-**List tasks:**
+**Update a task:**
 ```bash
-node dist/index.js task list
-node dist/index.js task list --column tCYMGmsIgjn2
-node dist/index.js task list --column tCYMGmsIgjn2 --swimlane tKj4BTPzndRK
+node dist/index.js task update TASK_ID \
+  [--name "New name"] \
+  [--column NEW_COLUMN_ID] \
+  [--color COLOR] \
+  [--points NUMBER]
 ```
 
-**Show board:**
-```bash
-node dist/index.js board show
-```
+### Subtask Commands
 
 **Add subtask:**
 ```bash
 node dist/index.js subtask add TASK_ID --name "Subtask name"
+node dist/index.js subtask add TASK_ID --name "Subtask name" --index 0
+```
+
+**Update subtask:**
+```bash
+node dist/index.js subtask update TASK_ID SUBTASK_INDEX --finished true
+node dist/index.js subtask update TASK_ID SUBTASK_INDEX --name "New name"
 ```
 
 ## Task Properties
 
-- **Colors**: yellow, white, red, green, blue, purple, orange, cyan, brown, magenta
-- **Time**: In seconds (900 = 15 min, 1800 = 30 min, 3600 = 1 hour)
-- **Points**: Story points for estimation
+### Colors
+Available values: `yellow`, `white`, `red`, `green`, `blue`, `purple`, `orange`, `cyan`, `brown`, `magenta`
+
+Default: `yellow`
+
+### Time Estimates
+Time is specified in seconds:
+- 15 minutes = 900 seconds
+- 30 minutes = 1800 seconds
+- 1 hour = 3600 seconds
+- 2 hours = 7200 seconds
+- 1 day (8 hours) = 28800 seconds
+
+### Position
+When creating tasks:
+- `top` - Add to top of column
+- `bottom` - Add to bottom of column (default)
+- `0`, `1`, `2`... - Specific position index
+
+### Points
+Story points for estimation (any number)
+
+## Workflow
+
+1. **Always start by getting board structure:**
+   ```bash
+   node dist/index.js board show
+   ```
+   This shows all available columns and swimlanes with their IDs.
+
+2. **Use the IDs from step 1** when creating or updating tasks
+
+3. **For recurring tasks**, use loops or multiple commands to create similar tasks
+
+## Examples
+
+### Create a simple task
+```bash
+node dist/index.js task create \
+  --name "Review pull request" \
+  --column C_TODO_ID \
+  --color blue
+```
+
+### Create task with full details
+```bash
+node dist/index.js task create \
+  --name "Implement feature X" \
+  --column C_TODO_ID \
+  --swimlane S_WORK_ID \
+  --description "Add new authentication flow" \
+  --color purple \
+  --points 8 \
+  --time 14400 \
+  --position top
+```
+
+### Move task to different column
+```bash
+node dist/index.js task update TASK_ID --column C_DONE_ID
+```
+
+### Add multiple subtasks
+```bash
+node dist/index.js subtask add TASK_ID --name "Research"
+node dist/index.js subtask add TASK_ID --name "Design"
+node dist/index.js subtask add TASK_ID --name "Implement"
+node dist/index.js subtask add TASK_ID --name "Test"
+```
 
 ## Tips
 
-- When creating multiple similar tasks (e.g., recurring sessions), use a loop or multiple commands
-- Always verify column/swimlane IDs with `board show` if unsure
-- Use descriptive task names to make the board more readable
+- Always run `board show` first to get current column and swimlane IDs
+- Use descriptive task names for better board readability
 - Color-code tasks by type or priority for visual organization
+- Set time estimates to help with planning and tracking
+- Use swimlanes to categorize tasks by project or area of responsibility
