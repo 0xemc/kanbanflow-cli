@@ -136,3 +136,12 @@ export interface KanbanFlowConfig {
   apiToken: string;
   baseUrl?: string;
 }
+
+export interface TaskGroup {
+  columnId: string;
+  columnName: string;
+  swimlaneId: string;
+  swimlaneName: string;
+  tasksLimited: boolean;
+  tasks: Task[];
+}

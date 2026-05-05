@@ -14,25 +14,16 @@ Use this skill when the user wants to:
 
 ## Implementation
 
-The CLI is located at `/workspace/group/projects/kanbanflow-cli/`.
+The CLI is located at `/home/xemc/services/kanbanflow-cli/`.
 
 ### Setup
 
-Always set the API token environment variable before running commands. Check for the token in:
-1. `.env` file in the project directory
-2. User's config at `~/.kanbanflow-cli/config.json`
-3. Ask the user if not found
-
-```bash
-export KANBANFLOW_API_TOKEN=<token>
-```
+The API token is read automatically from the `.env` file in the project directory. If missing, check `~/.kanbanflow-cli/config.json` or ask the user.
 
 ### Running Commands
 
 ```bash
-cd /workspace/group/projects/kanbanflow-cli && \
-export KANBANFLOW_API_TOKEN=<token> && \
-node dist/index.js [command]
+cd /home/xemc/services/kanbanflow-cli && node dist/index.js [command]
 ```
 
 ## Available Commands
@@ -85,6 +76,11 @@ node dist/index.js task update TASK_ID \
   [--column NEW_COLUMN_ID] \
   [--color COLOR] \
   [--points NUMBER]
+```
+
+**Search tasks by name or label (with time logged):**
+```bash
+node dist/index.js task search --query TERM
 ```
 
 ### Subtask Commands

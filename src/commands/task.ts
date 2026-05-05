@@ -5,7 +5,7 @@
 import { Command } from 'commander';
 import { KanbanFlowClient } from '../api/client';
 import { getApiToken } from '../utils/config';
-import { formatTask, formatColumnWithTasks } from '../utils/format';
+import { formatTask, formatColumnWithTasks, formatTime } from '../utils/format';
 import { CreateTaskRequest, TaskColor } from '../types';
 import chalk from 'chalk';
 import ora from 'ora';
@@ -198,6 +198,58 @@ export function createTaskCommand(): Command {
         spinner.succeed('Task updated successfully');
       } catch (error: any) {
         spinner.fail('Failed to update task');
+        console.error(chalk.red(error.message));
+        process.exit(1);
+      }
+    });
+
+  // Search tasks by name or label
+  task
+    .command('search')
+    .description('Search tasks by name or label and show time logged')
+    .requiredOption('-q, --query <query>', 'Search term (matches task name or any label, case-insensitive)')
+    .action(async (options) => {
+      const apiToken = getApiToken();
+      if (!apiToken) {
+        console.error(chalk.red('Error: API token not configured. Run "kanban config set-token" first.'));
+        process.exit(1);
+      }
+
+      const spinner = ora('Searching tasks...').start();
+      const client = new KanbanFlowClient(apiToken);
+
+      try {
+        const allTasks = await client.getAllTasksFlat();
+        const q = options.query.toLowerCase();
+        const matches = allTasks.filter(t => {
+          const nameMatch = t.name?.toLowerCase().includes(q);
+          const labelMatch = t.labels?.some((l: any) => l.name?.toLowerCase().includes(q));
+          return nameMatch || labelMatch;
+        });
+
+        spinner.stop();
+
+        if (matches.length === 0) {
+          console.log(chalk.yellow(`No tasks found matching "${options.query}"`));
+          return;
+        }
+
+        let totalSeconds = 0;
+        console.log(chalk.bold(`\nTasks matching "${options.query}":`));
+        console.log(chalk.gray('─'.repeat(50)));
+
+        for (const t of matches) {
+          const spent = t.totalSecondsSpent || 0;
+          totalSeconds += spent;
+          const matchReason = t.name?.toLowerCase().includes(q) ? 'name' : 'label';
+          console.log(`  ${formatTask(t)} ${chalk.gray(`[matched by ${matchReason}]`)}`);
+          console.log(`    ${chalk.gray('Time logged:')} ${chalk.green(formatTime(spent))}`);
+        }
+
+        console.log(chalk.gray('─'.repeat(50)));
+        console.log(chalk.bold(`Total time logged: ${chalk.green(formatTime(totalSeconds))} across ${matches.length} task(s)`));
+      } catch (error: any) {
+        spinner.fail('Failed to search tasks');
         console.error(chalk.red(error.message));
         process.exit(1);
       }

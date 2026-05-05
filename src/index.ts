@@ -5,6 +5,7 @@
  * A command-line interface for the KanbanFlow API
  */
 
+import 'dotenv/config';
 import { Command } from 'commander';
 import { createBoardCommand } from './commands/board';
 import { createTaskCommand } from './commands/task';

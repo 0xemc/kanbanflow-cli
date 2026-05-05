@@ -6,6 +6,7 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import {
   Board,
   Task,
+  TaskGroup,
   CreateTaskRequest,
   SubTask,
   Label,
@@ -42,8 +43,18 @@ export class KanbanFlowClient {
 
   // Task Operations
   async getAllTasks(): Promise<Record<string, Task[]>> {
-    const { data } = await this.client.get<Record<string, Task[]>>('/tasks');
-    return data;
+    const { data } = await this.client.get<TaskGroup[]>('/tasks');
+    const result: Record<string, Task[]> = {};
+    for (const group of data) {
+      if (!result[group.columnId]) result[group.columnId] = [];
+      result[group.columnId].push(...group.tasks);
+    }
+    return result;
+  }
+
+  async getAllTasksFlat(): Promise<Task[]> {
+    const { data } = await this.client.get<TaskGroup[]>('/tasks');
+    return data.flatMap(g => g.tasks);
   }
 
   async getTasksByColumn(
@@ -59,8 +70,8 @@ export class KanbanFlowClient {
     if (options?.limit) params.limit = Math.min(options.limit, 100);
     if (options?.order) params.order = options.order;
 
-    const { data } = await this.client.get<Task[]>('/tasks', { params });
-    return data;
+    const { data } = await this.client.get<TaskGroup[]>('/tasks', { params });
+    return data.flatMap(g => g.tasks);
   }
 
   async getTasksBySwimlaneAndColumn(
@@ -77,8 +88,8 @@ export class KanbanFlowClient {
     if (options?.limit) params.limit = Math.min(options.limit, 100);
     if (options?.order) params.order = options.order;
 
-    const { data} = await this.client.get<Task[]>('/tasks', { params });
-    return data;
+    const { data } = await this.client.get<TaskGroup[]>('/tasks', { params });
+    return data.flatMap(g => g.tasks);
   }
 
   async getTask(taskId: string, includePosition: boolean = false): Promise<Task> {
